@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://newbiemail.github.io/NewbieMail-Eyewear/sitemap.xml
