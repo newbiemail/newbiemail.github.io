@@ -1,6 +1,13 @@
+
 const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
-const toast=(m)=>{let t=$('.toast'); if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)} t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)};
-const getStore=(k)=>JSON.parse(localStorage.getItem(k)||'[]'); const setStore=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-$$('[data-wishlist]').forEach(b=>b.addEventListener('click',()=>{const item=b.dataset.wishlist, list=getStore('nmWishlist'); if(!list.includes(item)) list.push(item); setStore('nmWishlist',list); toast('Saved to wishlist');}));
-$$('[data-cart]').forEach(b=>b.addEventListener('click',()=>{const item=b.dataset.cart, list=getStore('nmCart'); list.push(item); setStore('nmCart',list); toast('Added to your bag');}));
-const year=$('[data-year]'); if(year) year.textContent=new Date().getFullYear();
+const toast=(m)=>{let t=$('.toast'); if(!t){t=document.createElement('div');t.className='toast';document.body.appendChild(t)}t.textContent=m;t.classList.add('show');clearTimeout(window._toast);window._toast=setTimeout(()=>t.classList.remove('show'),1700)};
+const getSaved=()=>JSON.parse(localStorage.getItem('nmSaved')||'[]');
+const setSaved=v=>localStorage.setItem('nmSaved',JSON.stringify(v));
+$$('[data-save]').forEach(btn=>{const slug=btn.dataset.save; if(getSaved().includes(slug)) btn.textContent='♥'; btn.addEventListener('click',()=>{let s=getSaved(); if(s.includes(slug)){s=s.filter(x=>x!==slug);btn.textContent='♡';toast('Removed from saved')}else{s.push(slug);btn.textContent='♥';toast('Saved for later')}setSaved(s)})});
+const menu=$('.mobile-menu'); $('.hamburger')?.addEventListener('click',()=>menu?.classList.add('show')); $('.mobile-close')?.addEventListener('click',()=>menu?.classList.remove('show'));
+const cards=$$('[data-product-card]'), filters=$$('[data-filter]'), search=$('[data-search]');
+let active='all';
+function applyFilters(){if(!cards.length)return;const q=(search?.value||'').trim().toLowerCase();let shown=0;cards.forEach(c=>{const hay=(c.dataset.search||'').toLowerCase();const matchesFilter=active==='all'||hay.includes(active);const matchesQ=!q||hay.includes(q);const yes=matchesFilter&&matchesQ;c.style.display=yes?'':'none';if(yes)shown++});let nr=$('.no-results');if(!shown){if(!nr){nr=document.createElement('div');nr.className='no-results';nr.textContent='No frames match those filters.';$('.product-grid')?.appendChild(nr)}}else nr?.remove()}
+filters.forEach(f=>f.addEventListener('click',()=>{filters.forEach(x=>x.classList.remove('active'));f.classList.add('active');active=f.dataset.filter;applyFilters()}));search?.addEventListener('input',applyFilters);
+const savedRoot=$('[data-saved-root]');
+if(savedRoot && window.PRODUCTS){const saved=getSaved();const list=window.PRODUCTS.filter(p=>saved.includes(p.slug));if(!list.length){savedRoot.innerHTML='<div class="empty-state"><h2>No saved frames yet.</h2><p>Use the heart on any product to keep it here.</p><a class="btn btn-dark" href="shop.html">Explore the edit</a></div>'}else{savedRoot.innerHTML='<div class="saved-panel"><div class="saved-list">'+list.map(p=>`<div class="saved-item"><img src="${p.image}" alt="${p.brand} ${p.name}"><div><div class="product-brand">${p.brand}</div><strong>${p.name}</strong><div class="range">$${p.price.toLocaleString()}</div></div><a class="card-link" href="product-${p.slug}.html">View</a></div>`).join('')+'</div></div>'}}
